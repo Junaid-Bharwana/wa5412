@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Sender API - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>📱 WhatsApp Sender API</h1>
+            <div class="status-indicator" id="statusIndicator">
+                <span class="status-dot"></span>
+                <span class="status-text">Checking...</span>
+            </div>
+        </header>
+
+        <nav class="tabs">
+            <button class="tab active" onclick="showTab('connection')">🔌 Connection</button>
+            <button class="tab" onclick="showTab('send')">📤 Send Message</button>
+            <button class="tab" onclick="showTab('bulk')">📨 Bulk Send</button>
+            <button class="tab" onclick="showTab('contacts')">👥 Contacts</button>
+            <button class="tab" onclick="showTab('groups')">👪 Groups</button>
+            <button class="tab" onclick="showTab('api')">🔌 API Docs</button>
+        </nav>
+
+        <!-- Connection Tab -->
+        <div id="connection" class="tab-content active">
+            <div class="card">
+                <h2>📱 WhatsApp Connection</h2>
+                
+                <div id="qrSection" class="qr-section" style="display: none;">
+                    <p class="info-text">Scan this QR code with your WhatsApp:</p>
+                    <div id="qrCode" class="qr-code"></div>
+                    <div style="margin-top: 15px;">
+                        <button onclick="refreshQR()" class="btn btn-secondary">🔄 Refresh QR</button>
+                        <button onclick="showQRImage()" class="btn btn-secondary">📷 Show as Image</button>
+                    </div>
+                    <div id="qrImageContainer" style="display: none; margin-top: 20px;">
+                        <img id="qrImage" src="" alt="QR Code" style="max-width: 400px; border-radius: 10px;">
+                    </div>
+                </div>
+
+                <div id="connectedSection" style="display: none;">
+                    <div class="success-message">
+                        ✅ WhatsApp is connected and ready!
+                    </div>
+                    <button onclick="logout()" class="btn btn-danger">🚪 Logout</button>
+                </div>
+
+                <div id="disconnectedSection" style="display: none;">
+                    <div class="warning-message">
+                        ⚠️ WhatsApp is not connected. Please wait for QR code or restart the server.
+                    </div>
+                    <button onclick="checkStatus()" class="btn btn-primary">🔄 Check Status</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Connection Info</h3>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Status:</span>
+                        <span id="connStatus" class="value">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">State:</span>
+                        <span id="connState" class="value">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Send Message Tab -->
+        <div id="send" class="tab-content">
+            <div class="card">
+                <h2>📤 Send Message</h2>
+                <form id="sendForm" onsubmit="sendMessage(event)">
+                    <div class="form-group">
+                        <label>Phone Number (with country code)</label>
+                        <input type="text" id="phoneNumber" placeholder="1234567890" required>
+                        <small>Example: 1234567890 (without + or spaces)</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea id="message" rows="5" placeholder="Enter your message here..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">📤 Send Message</button>
+                </form>
+
+                <div id="sendResult" class="result-box" style="display: none;"></div>
+            </div>
+
+            <div class="card">
+                <h3>📷 Send Image</h3>
+                <form id="sendImageForm" onsubmit="sendImage(event)">
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="text" id="imagePhoneNumber" placeholder="1234567890" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Image</label>
+                        <input type="file" id="imageFile" accept="image/*" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Caption (optional)</label>
+                        <input type="text" id="imageCaption" placeholder="Image caption">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">📷 Send Image</button>
+                </form>
+
+                <div id="imageResult" class="result-box" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Bulk Send Tab -->
+        <div id="bulk" class="tab-content">
+            <div class="card">
+                <h2>📨 Bulk Message Sender</h2>
+                <form id="bulkForm" onsubmit="sendBulk(event)">
+                    <div class="form-group">
+                        <label>Phone Numbers (one per line)</label>
+                        <textarea id="bulkNumbers" rows="8" placeholder="1234567890&#10;9876543210&#10;..." required></textarea>
+                        <small>Enter one phone number per line</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea id="bulkMessage" rows="5" placeholder="Your message..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Delay between messages (milliseconds)</label>
+                        <input type="number" id="bulkDelay" value="2000" min="1000" max="10000">
+                        <small>Recommended: 2000-5000ms to avoid spam detection</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">📨 Send Bulk Messages</button>
+                </form>
+
+                <div id="bulkResult" class="result-box" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Contacts Tab -->
+        <div id="contacts" class="tab-content">
+            <div class="card">
+                <h2>👥 Contacts</h2>
+                <button onclick="loadContacts()" class="btn btn-primary">🔄 Load Contacts</button>
+                
+                <div id="contactsList" class="contacts-list"></div>
+            </div>
+        </div>
+
+        <!-- Groups Tab -->
+        <div id="groups" class="tab-content">
+            <div class="card">
+                <h2>👪 Groups</h2>
+                <button onclick="loadGroups()" class="btn btn-primary">🔄 Load Groups</button>
+                
+                <div id="groupsList" class="groups-list"></div>
+            </div>
+
+            <div class="card">
+                <h3>📤 Send Group Message</h3>
+                <form id="groupForm" onsubmit="sendGroupMessage(event)">
+                    <div class="form-group">
+                        <label>Group ID</label>
+                        <input type="text" id="groupId" placeholder="120363XXXXXXXX@g.us" required>
+                        <small>Copy from groups list above</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Message</label>
+                        <textarea id="groupMessage" rows="5" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">📤 Send to Group</button>
+                </form>
+
+                <div id="groupResult" class="result-box" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- API Docs Tab -->
+        <div id="api" class="tab-content">
+            <div class="card">
+                <h2>🔌 API Documentation</h2>
+                
+                <div class="api-section">
+                    <h3>Authentication</h3>
+                    <p>Include your API key in the request header:</p>
+                    <pre><code>X-API-Key: your-api-key-here</code></pre>
+                    <p>Or as a query parameter:</p>
+                    <pre><code>?api_key=your-api-key-here</code></pre>
+                </div>
+
+                <div class="api-section">
+                    <h3>📤 Send Message</h3>
+                    <pre><code>POST /api/send-message
+Content-Type: application/json
+
+{
+  "number": "1234567890",
+  "message": "Hello from API!"
+}</code></pre>
+                </div>
+
+                <div class="api-section">
+                    <h3>📷 Send Image</h3>
+                    <pre><code>POST /api/send-image
+Content-Type: multipart/form-data
+
+number: 1234567890
+image: [file]
+caption: Optional caption</code></pre>
+                </div>
+
+                <div class="api-section">
+                    <h3>📨 Send Bulk Messages</h3>
+                    <pre><code>POST /api/send-bulk
+Content-Type: application/json
+
+{
+  "numbers": ["1234567890", "9876543210"],
+  "message": "Bulk message",
+  "delay": 2000
+}</code></pre>
+                </div>
+
+                <div class="api-section">
+                    <h3>👥 Get Contacts</h3>
+                    <pre><code>GET /api/contacts</code></pre>
+                </div>
+
+                <div class="api-section">
+                    <h3>👪 Get Groups</h3>
+                    <pre><code>GET /api/groups</code></pre>
+                </div>
+
+                <div class="api-section">
+                    <h3>📊 Check Status</h3>
+                    <pre><code>GET /api/status</code></pre>
+                </div>
+
+                <div class="api-section">
+                    <h3>🚪 Logout</h3>
+                    <pre><code>POST /api/logout</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
+

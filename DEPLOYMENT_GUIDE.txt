@@ -1,0 +1,289 @@
+================================================================================
+                    CPANEL DEPLOYMENT GUIDE
+                    WhatsApp Sender API
+================================================================================
+
+STEP 1: PREPARE FILES FOR UPLOAD
+================================================================================
+
+Files to Upload (Entire wa folder):
+------------------------------------
+✓ server.js
+✓ package.json
+✓ .env (IMPORTANT - configure before upload)
+✓ services/whatsapp.js
+✓ routes/api.js
+✓ routes/web.js
+✓ public/index.html
+✓ public/style.css
+✓ public/script.js
+
+Folders (will be created automatically):
+-----------------------------------------
+✓ sessions/ (auto-created)
+✓ uploads/ (auto-created)
+✓ logs/ (auto-created)
+✓ node_modules/ (installed via cPanel)
+
+
+STEP 2: CONFIGURE .ENV FILE BEFORE UPLOAD
+================================================================================
+
+Edit wa/.env file and set:
+
+PORT=3000
+HOST=0.0.0.0
+API_KEY=YOUR-STRONG-SECRET-KEY-HERE-CHANGE-THIS
+ENABLE_API_KEY=true
+WEBHOOK_URL=
+WEBHOOK_ENABLED=false
+SESSION_NAME=whatsapp-session
+ALLOWED_ORIGINS=*
+
+IMPORTANT: Change API_KEY to something strong and unique!
+
+
+STEP 3: COMPRESS FOR UPLOAD
+================================================================================
+
+1. Right-click on "wa" folder
+2. Select "Send to" > "Compressed (zipped) folder"
+3. Name it: whatsapp-api.zip
+
+
+STEP 4: UPLOAD TO CPANEL
+================================================================================
+
+1. Login to your cPanel
+2. Go to "File Manager"
+3. Navigate to your desired directory (e.g., /home/username/)
+4. Click "Upload" button
+5. Upload "whatsapp-api.zip"
+6. Wait for upload to complete
+7. Right-click the zip file
+8. Click "Extract"
+9. Extract to current directory
+10. Delete the zip file after extraction
+
+
+STEP 5: SETUP NODE.JS APPLICATION IN CPANEL
+================================================================================
+
+1. In cPanel, search for "Setup Node.js App" or "Node.js Selector"
+2. Click "Create Application"
+3. Fill in the form:
+
+   Node.js version: 16.x or higher (select latest available)
+   Application mode: Production
+   Application root: /home/username/wa (adjust to your path)
+   Application URL: whatsapp-api (or your choice)
+   Application startup file: server.js
+   
+4. Click "Create"
+
+
+STEP 6: INSTALL DEPENDENCIES
+================================================================================
+
+In cPanel Node.js App interface:
+
+1. Click "Run NPM Install" button
+   OR
+2. Use Terminal/SSH:
+   cd /home/username/wa
+   npm install
+
+
+STEP 7: CONFIGURE ENVIRONMENT
+================================================================================
+
+1. In File Manager, navigate to wa folder
+2. Right-click .env file
+3. Click "Edit"
+4. Verify/Update settings:
+   - API_KEY (must be strong and unique)
+   - PORT (use what cPanel assigned, usually shown in Node.js App)
+5. Save the file
+
+
+STEP 8: START THE APPLICATION
+================================================================================
+
+In cPanel Node.js App interface:
+
+1. Click "Start App" button
+2. Wait for status to show "Running"
+3. Note the application URL shown
+
+
+STEP 9: ACCESS YOUR APPLICATION
+================================================================================
+
+Your WhatsApp API will be available at:
+
+https://yourdomain.com/whatsapp-api
+
+Or the URL shown in cPanel Node.js App interface
+
+
+STEP 10: SCAN QR CODE
+================================================================================
+
+1. Open: https://yourdomain.com/whatsapp-api
+2. Wait for QR code to appear
+3. Click "Show as Image" if needed
+4. Open WhatsApp on phone
+5. Go to Settings > Linked Devices
+6. Tap "Link a Device"
+7. Scan the QR code
+8. Done! Your WhatsApp API is live!
+
+
+STEP 11: TEST THE API
+================================================================================
+
+Test Status:
+https://yourdomain.com/whatsapp-api/api/status
+
+Test QR Image:
+https://yourdomain.com/whatsapp-api/api/qr-image
+
+Send Message (via PHP):
+<?php
+$ch = curl_init('https://yourdomain.com/whatsapp-api/api/send-message');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode([
+    'number' => '1234567890',
+    'message' => 'Hello from live server!'
+]));
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Content-Type: application/json',
+    'X-API-Key: YOUR-API-KEY-HERE'
+]);
+echo curl_exec($ch);
+?>
+
+
+TROUBLESHOOTING
+================================================================================
+
+Issue: Application won't start
+Solution: 
+- Check Node.js version (must be 16+)
+- Verify all files uploaded correctly
+- Check .env file exists and is configured
+- Review error logs in cPanel
+
+Issue: Port already in use
+Solution:
+- cPanel assigns ports automatically
+- Use the port shown in Node.js App interface
+- Update .env PORT if needed
+
+Issue: Cannot access application
+Solution:
+- Verify application is "Running" in cPanel
+- Check the correct URL (shown in Node.js App)
+- Clear browser cache
+- Check .htaccess if using subdomain
+
+Issue: QR code not showing
+Solution:
+- Open: /api/qr-image directly
+- Use "Show as Image" button
+- Check browser console for errors
+
+Issue: Messages not sending
+Solution:
+- Verify WhatsApp is connected (check /api/status)
+- Ensure API_KEY is correct in requests
+- Check phone number format (no + or spaces)
+
+
+IMPORTANT NOTES
+================================================================================
+
+1. SECURITY:
+   - Use strong API_KEY
+   - Don't share your API_KEY publicly
+   - Enable HTTPS on your domain
+   - Restrict API access if needed
+
+2. MAINTENANCE:
+   - Backup sessions/ folder regularly
+   - Monitor application logs
+   - Keep Node.js and packages updated
+   - Check WhatsApp connection status daily
+
+3. PERFORMANCE:
+   - Use delays between bulk messages (2-5 seconds)
+   - Don't send spam
+   - Respect WhatsApp rate limits
+   - Monitor server resources
+
+4. SESSION MANAGEMENT:
+   - sessions/ folder contains your WhatsApp login
+   - Backup this folder to preserve connection
+   - Delete to logout completely
+   - Don't share session files
+
+
+FILE STRUCTURE (What you uploaded)
+================================================================================
+
+wa/
+├── server.js              (Main server file)
+├── package.json           (Dependencies list)
+├── .env                   (Configuration - IMPORTANT!)
+├── services/
+│   └── whatsapp.js       (WhatsApp connection logic)
+├── routes/
+│   ├── api.js            (API endpoints)
+│   └── web.js            (Web routes)
+├── public/
+│   ├── index.html        (Dashboard interface)
+│   ├── style.css         (Styling)
+│   └── script.js         (Frontend JavaScript)
+├── sessions/             (Created automatically - WhatsApp session)
+├── uploads/              (Created automatically - Temp files)
+└── logs/                 (Created automatically - Log files)
+
+
+API ENDPOINTS AVAILABLE
+================================================================================
+
+GET  /api/status              - Check connection status
+GET  /api/qr                  - Get QR code data
+GET  /api/qr-image            - Get QR code as image
+POST /api/send-message        - Send text message
+POST /api/send-image          - Send image
+POST /api/send-document       - Send document
+POST /api/send-bulk           - Send bulk messages
+GET  /api/contacts            - Get contacts list
+GET  /api/groups              - Get groups list
+POST /api/send-group-message  - Send group message
+POST /api/logout              - Logout session
+
+
+SUPPORT
+================================================================================
+
+If you encounter issues:
+1. Check cPanel error logs
+2. Verify Node.js version compatibility
+3. Ensure all files uploaded correctly
+4. Check .env configuration
+5. Test API endpoints individually
+
+
+CONGRATULATIONS!
+================================================================================
+
+Your WhatsApp Sender API is now live and ready to use!
+
+Access your dashboard at:
+https://yourdomain.com/whatsapp-api
+
+================================================================================
+
